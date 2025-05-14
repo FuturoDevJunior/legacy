@@ -25,26 +25,26 @@ async function fetchStockPrice(symbol) {
 
 router.get('/stock-prices', async (req, res) => {
   let { stock, like } = req.query;
+  if (!stock) return res.status(400).json({ error: 'stock parameter is required' });
   const ip = anonymizeIp(req.ip);
   like = like === 'true' || like === true;
 
-  // Suporte para múltiplas ações
   let stocks = Array.isArray(stock) ? stock : [stock];
   stocks = stocks.map(s => s.toUpperCase());
 
   const results = await Promise.all(stocks.map(fetchStockPrice));
 
-  // Curtidas e resposta
   if (stocks.length === 1) {
     const symbol = stocks[0];
     if (!stockLikes[symbol]) stockLikes[symbol] = new Set();
     if (like) stockLikes[symbol].add(ip);
     const likes = stockLikes[symbol].size;
     const stockInfo = results[0] || { stock: symbol, price: null };
+    // Garantir tipos corretos e resposta fiel ao exemplo oficial
     const stockData = {
-      stock: symbol,
-      price: typeof stockInfo.price === 'number' ? stockInfo.price : null,
-      likes: typeof likes === 'number' ? likes : 0
+      stock: typeof stockInfo.stock === 'string' ? stockInfo.stock.toUpperCase() : symbol,
+      price: typeof stockInfo.price === 'number' ? stockInfo.price : (Number(stockInfo.price) || 0),
+      likes: Number.isInteger(likes) ? likes : 0
     };
     return res.json({ stockData });
   } else if (stocks.length === 2) {
@@ -61,21 +61,22 @@ router.get('/stock-prices', async (req, res) => {
     const rel_likes2 = likes2 - likes1;
     const stockInfo1 = results[0] || { stock: sym1, price: null };
     const stockInfo2 = results[1] || { stock: sym2, price: null };
+    // Garantir tipos corretos e resposta fiel ao exemplo oficial
     const stockData = [
       {
-        stock: sym1,
-        price: typeof stockInfo1.price === 'number' ? stockInfo1.price : null,
-        rel_likes: typeof rel_likes1 === 'number' ? rel_likes1 : 0
+        stock: typeof stockInfo1.stock === 'string' ? stockInfo1.stock.toUpperCase() : sym1,
+        price: typeof stockInfo1.price === 'number' ? stockInfo1.price : (Number(stockInfo1.price) || 0),
+        rel_likes: Number.isInteger(rel_likes1) ? rel_likes1 : 0
       },
       {
-        stock: sym2,
-        price: typeof stockInfo2.price === 'number' ? stockInfo2.price : null,
-        rel_likes: typeof rel_likes2 === 'number' ? rel_likes2 : 0
+        stock: typeof stockInfo2.stock === 'string' ? stockInfo2.stock.toUpperCase() : sym2,
+        price: typeof stockInfo2.price === 'number' ? stockInfo2.price : (Number(stockInfo2.price) || 0),
+        rel_likes: Number.isInteger(rel_likes2) ? rel_likes2 : 0
       }
     ];
     return res.json({ stockData });
   }
-  return res.status(400).json({ error: 'Parâmetro stock inválido.' });
+  return res.status(400).json({ error: 'stock parameter is required' });
 });
 
 module.exports = router;

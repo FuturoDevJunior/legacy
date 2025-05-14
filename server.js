@@ -19,8 +19,7 @@ app.use(helmet.contentSecurityPolicy({
     imgSrc: ["'self'", 'data:'],
     connectSrc: ["'self'"],
     fontSrc: ["'self'"],
-    objectSrc: ["'none'"],
-    upgradeInsecureRequests: [],
+    objectSrc: ["'none'"]
   }
 }));
 app.use(bodyParser.json());
